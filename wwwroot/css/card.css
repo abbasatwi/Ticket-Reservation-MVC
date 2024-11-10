@@ -1,0 +1,99 @@
+﻿.cards-wrapper{
+    display : flex;
+}
+.card {
+    margin : 0.5em;
+    width : calc(100%/3);
+    
+}
+
+.image-wrapper {
+    height: 20vw;
+
+}
+
+.image-wrapper img{
+    width : 100%;
+    height : auto;
+}
+
+/* Styles for Carousel wrapper */
+#cardCarousel {
+
+}
+
+    /* Styles for Carousel inner */
+    #cardCarousel .carousel-inner {
+        
+
+    }
+
+    /* Styles for Single carousel item */
+    #cardCarousel .carousel-item {
+        /* Your styles for the carousel item */
+    }
+
+    /* Styles for Cards wrapper */
+    #cardCarousel .cards-wrapper {
+        /* Your styles for the cards wrapper */
+    }
+
+    /* Styles for Card */
+    #cardCarousel .card {
+
+    }
+
+    /* Styles for Background image */
+    #cardCarousel .bg-image {
+        /* Your styles for the background image */
+    }
+
+    /* Styles for Image wrapper */
+    #cardCarousel .image-wrapper {
+        
+    }
+
+    /* Styles for Card body */
+    #cardCarousel .card-body {
+       
+        
+    }
+
+    /* Styles for Card title */
+    #cardCarousel .card-title {
+        font-size : 15px;
+    }
+
+    /* Styles for Card text */
+    #cardCarousel .card-text {
+        font-size : 12px;
+    }
+
+    /* Styles for Button */
+    #cardCarousel .btn {
+        font-size: 12px;
+        padding: 10px 15px;
+    }
+.carousel-title {
+    font-family: 'Times New Roman', Times, sans-serif;
+    font-weight : bold;
+    color : black;
+    font-size: 25px;
+    display: block; /* Ensure the element is displayed */
+    text-align: left; /* Center align the text */
+    margin-bottom: 20px; /* Add some space below the title */
+    margin-top : 20px;
+}
+.icon-text {
+    display: flex;
+    align-items: baseline; /* Align items on the baseline */
+}
+
+.icon-block {
+    margin-right: 10px; /* Adjust as needed */
+}
+.btn btn-primary {
+    font-size: 12px;
+    padding: 10px 15px;
+}
+

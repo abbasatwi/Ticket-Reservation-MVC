@@ -1,0 +1,52 @@
+﻿@{
+    var stadium = ViewBag.Stadium as project_new.Models.Stadium;
+    var matches = ViewBag.Matches as List<project_new.Models.Match>;
+}
+
+<div class="container">
+    <div class="d-flex">
+        <div class="p-2 flex-fill">
+            <a href="@Url.Action("StadiumDetails", "Stadiums", new { stadiumId = stadium.Id })">
+                <img src="/img/@stadium.BackPicUrl" class="img-fluid lazyload" style="max-height: 500px; max-width:500px;" alt="Background Image">
+            </a>
+        </div>
+        <div class="p-2 flex-fill">
+            <h5 class="card-title">@stadium.Name</h5>
+            <p class="card-text">@stadium.Description</p>
+            <p class="card-text">Capacity: @stadium.Capacity</p>
+            <p class="card-text">Location: @stadium.Location</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">Matches</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var match in matches)
+                    {
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })">
+                                        <img src="/img/@match.MatchUrl" class="img-fluid lazyload" alt="Match Image">
+                                    </a>
+                                </div>
+                                <div class="col-md-8">
+                                    <h6>@match.HomeTeam.Name vs @match.AwayTeam.Name</h6>
+                                    <p>@match.MatchDate.ToString()</p>
+                                    <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })" class="btn btn-primary">View Tickets</a>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <a href="@Url.Action("StadiumDetails", "Stadiums", new { stadiumId = stadium.Id })">
+                <img src="/img/@stadium.PicUrl" class="img-fluid lazyload" alt="Stadium Image" style="height: 300px; width: 300px;">
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,32 @@
+﻿@model List<project_new.Models.Match>
+
+@{
+    ViewData["Title"] = "Subcategory Matches";
+}
+
+@if (Model != null && Model.Any())
+{
+    <ul class="list-group">
+        @foreach (var match in Model)
+        {
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })">
+                            <img src="/img/@match.MatchUrl" class="img-fluid lazyload" alt="Match Image">
+                        </a>
+                    </div>
+                    <div class="col-md-8">
+                        <h6>@match.HomeTeam.Name vs @match.AwayTeam.Name</h6>
+                        <p>@match.MatchDate.ToString()</p>
+                        <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })" class="btn btn-primary">View Tickets</a>
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No matches found for this subcategory.</p>
+}

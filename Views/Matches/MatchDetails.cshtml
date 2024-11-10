@@ -1,0 +1,147 @@
+﻿@{
+    ViewData["Title"] = "Match Details";
+}
+
+<div class="container">
+
+    <!-- Match Info -->
+    <h2>Match Information</h2>
+    <p><strong>Home Team:</strong> @ViewBag.Match.HomeTeam.Name</p>
+    <p><strong>Away Team:</strong> @ViewBag.Match.AwayTeam.Name</p>
+    <p><strong>Match Date:</strong> @ViewBag.Match.MatchDate.ToString()</p>
+
+    <!-- Stadium Info -->
+    <h2>Stadium Information</h2>
+    <p><strong>Stadium Name:</strong> @ViewBag.Match.Stadium.Name</p>
+    <p><strong>Location:</strong> @ViewBag.Match.Stadium.Location</p>
+    <p><strong>Description:</strong> @ViewBag.Match.Stadium.Description</p>
+    <img src="/img/@ViewBag.Match.Stadium.PicUrl" alt="Stadium Image" style="max-width: 300px; max-height: 300px;" />
+
+    <!-- Tickets Info -->
+    <h2>Tickets</h2>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="sort">Sort By:</label>
+            <select id="sort" class="form-select">
+                <option value="quantity">Quantity</option>
+                <option value="price">Price</option>
+                <option value="section">Section</option>
+                <option value="status">Status</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="filter">Filter By Status:</label>
+            <select id="filter" class="form-select">
+                <option value="">All</option>
+                <option value="Available">Available</option>
+                <option value="Reserved">Reserved</option>
+            </select>
+        </div>
+    </div>
+    <table id="ticketsTable" class="table">
+        <thead>
+            <tr>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Section</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ticket in ViewBag.Tickets)
+            {
+                <tr>
+                    <td>@ticket.Quantity</td>
+                    <td>@ticket.Price.ToString("C")</td>
+                    <td>@ticket.Section</td>
+                    <td>@ticket.TicketStatus</td>
+                    <td>
+                        @if (ticket.TicketStatus == "Available")
+                        {
+                            <form method="post" action="@Url.Action("Checkout", "Tickets")">
+                                <div class="input-group mb-3">
+                                    <select name="quantity" class="form-select" aria-label="Quantity">
+                                        @for (int i = 1; i <= ticket.Quantity; i++)
+                                        {
+                                            <option value="@i">@i</option>
+                                        }
+                                    </select>
+                                    <input type="hidden" name="ticketId" value="@ticket.Id" />
+                                    <button type="submit" class="btn btn-primary">Buy Now</button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-secondary" disabled>Reserved</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Total Available Tickets -->
+    <p><strong>Total Available Tickets:</strong> @ViewBag.TotalAvailableTickets</p>
+
+    <!-- Starting Price -->
+    <p><strong>Starting Price:</strong> @ViewBag.StartingPrice.ToString("C")</p>
+
+    <!-- Add to Favorites Button -->
+    <form method="post" action="@Url.Action("AddToFavorites", "Matches")">
+        <input type="hidden" name="matchId" value="@ViewBag.Match.Id" />
+        <button type="submit" class="btn btn-primary">Add to Favorites</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Get table and rows
+            var table = $('#ticketsTable');
+            var rows = table.find('tbody tr').toArray();
+
+            // Add event listener to sort dropdown
+            $('#sort').change(function () {
+                var selectedOption = $(this).val();
+                sortTable(selectedOption);
+            });
+
+            // Add event listener to filter dropdown
+            $('#filter').change(function () {
+                var selectedOption = $(this).val();
+                filterTable(selectedOption);
+            });
+
+            // Function to sort the table
+            function sortTable(sortBy) {
+                rows.sort(function (a, b) {
+                    var aValue = $(a).find('td:eq(' + getColumnIndex(sortBy) + ')').text();
+                    var bValue = $(b).find('td:eq(' + getColumnIndex(sortBy) + ')').text();
+                    return aValue.localeCompare(bValue);
+                });
+                table.children('tbody').empty().html(rows);
+            }
+
+            // Function to get column index
+            function getColumnIndex(columnName) {
+                return table.find('thead th').filter(function () {
+                    return $(this).text().toLowerCase() === columnName.toLowerCase();
+                }).index();
+            }
+
+            // Function to filter the table
+            function filterTable(filterBy) {
+                rows.forEach(function (row) {
+                    var status = $(row).find('td:eq(' + getColumnIndex('status') + ')').text();
+                    if (filterBy === '' || status === filterBy) {
+                        $(row).show();
+                    } else {
+                        $(row).hide();
+                    }
+                });
+            }
+        });
+    </script>
+}

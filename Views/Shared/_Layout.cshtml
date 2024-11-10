@@ -1,0 +1,163 @@
+﻿@using Microsoft.AspNetCore.Identity
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Football Tickets</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/project_new.styles.css" asp-append-version="true" />
+
+    <!--MDB5 bootstrap Carousel-->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <!-- MDB icon -->
+    <link rel="icon" href="~/img/mdb-favicon.ico" type="image/x-icon" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <!-- Google Fonts Roboto -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" />
+    <!-- MDB -->
+    <link rel="stylesheet" href="~/css/mdb.min.css" />
+    <link rel="stylesheet" href="~/css/card.css">
+    <link rel="stylesheet" href="~/css/navbar.css">
+
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css' rel='stylesheet' />
+
+
+</head>
+<body>
+    @if (User.Identity.IsAuthenticated)
+    {
+        @if (User.IsInRole("Admin"))
+        {
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+                <div class="container-fluid">
+                    <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Project Advanced</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin" aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarAdmin">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Matches" asp-action="Index"><i class="fa fa-gamepad" aria-hidden="true"></i> Matches</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Tickets" asp-action="Index"><i class="fa fa-ticket-alt" aria-hidden="true"></i> Tickets</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Categories" asp-action="Index"><i class="fa fa-tags" aria-hidden="true"></i> Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Stadium" asp-action="Index"><i class="fa fa-building" aria-hidden="true"></i> Stadiums</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Teams" asp-action="Index"><i class="fa fa-users" aria-hidden="true"></i> Teams</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-user-friends" aria-hidden="true"></i> People
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Players" asp-action="Index">Players</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Captains" asp-action="Index">Captains</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Managers" asp-action="Index">Managers</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                            <!-- Collapsible wrapper -->
+                            <partial name="_LoginPartial" />
+                        <!-- Container wrapper -->
+            </nav>  
+        }
+        else
+        {
+            <header>
+                <section class="border p-4 mb-4 d-flex align-items-center flex-column">
+                    <!-- Navbar -->
+                    <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary">
+                        <!-- Container wrapper -->
+                        <div class="container-fluid">
+                            <!-- Navbar brand -->
+                            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Project_Advanced</a>
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+
+                            <!-- Toggle button -->
+                            <button class="navbar-toggler"
+                            type="button"
+                            data-mdb-collapse-init
+                            data-mdb-target="#navbarSupportedContent"
+                            aria-controls="navbarSupportedContent"
+                            aria-expanded="false"
+                            aria-label="Toggle navigation">
+                                <i class="fas fa-bars"></i>
+                            </button>
+
+                            <!-- Collapsible wrapper -->
+                            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                                <!-- Left links -->
+                                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                                    </li>
+                                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                                        <!-- Left links -->
+                                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="@Url.Action("SubCategoryMatches", "Categories", new { subCategoryId = 1 })">Champions League</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="@Url.Action("SubCategoryMatches", "Categories", new { subCategoryId = 14 })">LaLiga</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="@Url.Action("SubCategoryMatches", "Categories", new { subCategoryId = 16 })">Premier League</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="@Url.Action("SubCategoryMatches", "Categories", new { subCategoryId = 6 })">Europa League</a>
+                                            </li>
+                                        </ul>
+
+                                    </div>
+
+                                </ul>
+                                <!-- Left links -->
+                                <!-- Search form -->
+                                <div class="input-group ps-5">
+                                    <form asp-controller="Matches" asp-action="Search" method="get">
+                                        <div id="navbar-search-autocomplete" class="form-outline" data-mdb-input-init>
+                                            <input type="search" id="searchTerm" name="searchTerm" class="form-control" />
+                                            <label class="form-label" for="searchTerm">Search</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+
+                            </div>
+                            <!-- Collapsible wrapper -->
+                            <partial name="_LoginPartial" />
+                        </div>
+                        <!-- Container wrapper -->
+
+                    </nav>
+                    <!-- Navbar -->
+                </section>
+            </header>
+        }
+    }
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script type="text/javascript" src="~/js/mdb.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

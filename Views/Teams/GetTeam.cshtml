@@ -1,0 +1,68 @@
+﻿@{
+    var team = ViewBag.Team as project_new.Models.Team;
+    var matches = ViewBag.Matches as List<project_new.Models.Match>;
+    var stadium = ViewBag.Stadium as project_new.Models.Stadium;
+}
+<div class="container">
+    <div class="row">
+        <!-- Left column for team logo and club info -->
+        <div class="d-flex">
+            <div class="p-2 flex-fill">
+                <a href="@Url.Action("TeamDetails", "Teams", new { teamId = team.Id })">
+                    <img src="/img/@team.LogoUrl" class="img-fluid" style="max-height: 600px; max-width:600px;" alt="Team Logo">
+                </a>
+            </div>
+            <div class="p-2 flex-fill">
+                <h5 class="card-title">@team.Name</h5>
+                <p class="card-text">@team.Description</p>
+                <!-- Manager Info -->
+                <h6>Manager: @team.Manager.Name</h6>
+                <!-- Captain Info -->
+                <h6>Captain: @team.Captain.Name</h6>
+            </div>
+        </div>
+
+        <!-- Right column for stadium info -->
+        <div class="d-flex">
+            <div class="p-2 flex-fill">
+                <a href="@Url.Action("StadiumDetails", "Stadiums", new { stadiumId = stadium.Id })">
+                    <img src="/img/@stadium.BackPicUrl" class="card-img-top" alt="Stadium Background Image" style="max-height: 500px; max-width:500px;">
+                </a>
+                <div class="p-2 flex-fill">
+                    <h5 class="card-title">@stadium.Name</h5>
+                    <p class="card-text">@stadium.Description</p>
+                    <p class="card-text">Capacity: @stadium.Capacity</p>
+                    <p class="card-text">Location: @stadium.Location</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matches cards -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">Matches</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var match in matches)
+                    {
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })">
+                                        <img src="/img/@match.MatchUrl" class="img-fluid lazyload" alt="Match Image">
+                                    </a>
+                                </div>
+                                <div class="col-md-8">
+                                    <h6>@match.HomeTeam.Name vs @match.AwayTeam.Name</h6>
+                                    <p>@match.MatchDate.ToString()</p>
+                                    <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })" class="btn btn-primary">View Tickets</a>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

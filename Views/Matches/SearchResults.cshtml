@@ -1,0 +1,19 @@
+﻿@model List<project_new.Models.Match>
+
+@foreach (var match in Model)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Match: @match.HomeTeam.Name vs @match.AwayTeam.Name</h5>
+            <p class="card-text">Date: @match.MatchDate.ToString()</p>
+            <p class="card-text">Location: @match.Stadium.Location</p>
+            <p class="card-text">Stadium: @match.Stadium.Name</p>
+            <!-- Include other match details as needed -->
+            @if (!string.IsNullOrEmpty(match.MatchUrl))
+            {
+                <a href="@match.MatchUrl" class="btn btn-primary">Watch Match</a>
+            }
+            <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })" class="btn btn-success">View Tickets</a>
+        </div>
+    </div>
+}
