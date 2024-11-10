@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 
 namespace project_new.Areas.Identity.Pages.Account.Manage
 {
@@ -55,7 +56,8 @@ namespace project_new.Areas.Identity.Pages.Account.Manage
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Phone]
+            [Required]
+            [RegularExpression(@"^\d{8}$", ErrorMessage = "Phone number must be exactly 8 digits.")]
             [Display(Name = "Phone number")]
             public string PhoneNumber { get; set; }
         }
@@ -99,6 +101,18 @@ namespace project_new.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
+            // Check if the phone number is already taken by another user
+            var existingUser = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.PhoneNumber == Input.PhoneNumber && u.Id != user.Id);
+
+            if (existingUser != null)
+            {
+                // Phone number is already in use
+                ModelState.AddModelError(string.Empty, "The phone number is already taken by another user.");
+                await LoadAsync(user);
+                return Page();
+            }
+
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             if (Input.PhoneNumber != phoneNumber)
             {
@@ -114,5 +128,6 @@ namespace project_new.Areas.Identity.Pages.Account.Manage
             StatusMessage = "Your profile has been updated";
             return RedirectToPage();
         }
+
     }
 }
