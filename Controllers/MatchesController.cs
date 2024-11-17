@@ -250,6 +250,13 @@ namespace project_new.Controllers
         }
         public IActionResult Search(string searchTerm)
         {
+            // Check if the search term is null or empty
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                ViewBag.Message = "No results found. Please enter a search term.";
+                return View("SearchResults", new List<Match>()); // Return an empty list
+            }
+
             // Perform search logic based on the searchTerm
             var matches = _context.Match
                 .Include(m => m.HomeTeam)
@@ -259,8 +266,15 @@ namespace project_new.Controllers
                 .Where(m => m.HomeTeam.Name.Contains(searchTerm) || m.AwayTeam.Name.Contains(searchTerm))
                 .ToList();
 
+            // Check if no matches are found
+            if (matches == null || !matches.Any())
+            {
+                ViewBag.Message = "No matches found for the provided search term.";
+            }
+
             return View("SearchResults", matches);
         }
+
 
     }
 }
