@@ -1,0 +1,11 @@
+﻿@page
+@model project_new.Views.Matches.NoResultFoundModel
+@{
+    ViewData["Title"] = "No Results Found";
+}
+
+<div class="container mt-5">
+    <h1 class="text-danger">No Results Found</h1>
+    <p>Please enter a search term and try again.</p>
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Return to Home</a>
+</div>
