@@ -140,14 +140,27 @@ namespace project_new.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var manager = await _context.Manager.FindAsync(id);
-            if (manager != null)
+            if (manager == null)
             {
-                _context.Manager.Remove(manager);
+                return RedirectToAction(nameof(Index)); // If manager not found, redirect to Index
             }
 
+            // Check if the manager is associated with a team or other entities
+            var isManagerInTeam = _context.Teams.Any(t => t.ManagerId == id);
+            if (isManagerInTeam)
+            {
+                // Add error and return the Delete view with the manager model
+                ModelState.AddModelError(string.Empty, "You must delete the team associated with this manager first.");
+                return View("Delete", manager);
+            }
+
+            // If no associated entities, delete the manager
+            _context.Manager.Remove(manager);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
+
 
         private bool ManagerExists(int id)
         {
