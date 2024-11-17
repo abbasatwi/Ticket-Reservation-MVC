@@ -182,15 +182,28 @@ namespace project_new.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var team = await _context.Teams.FindAsync(id);
-            if (team != null)
+            var team = await _context.Teams
+                .Include(t => t.HomeMatches)
+                .Include(t => t.AwayMatches)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (team == null)
             {
-                _context.Teams.Remove(team);
+                return NotFound();
             }
 
+            // Check if the team is part of any matches
+            if (team.HomeMatches.Any() || team.AwayMatches.Any())
+            {
+                ModelState.AddModelError(string.Empty, "The team cannot be deleted because it is associated with one or more matches.");
+                return View(team);
+            }
+
+            _context.Teams.Remove(team);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
 
         private bool TeamExists(int id)
         {
