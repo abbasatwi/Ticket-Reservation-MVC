@@ -34,39 +34,39 @@
 </head>
 <body>
     @if (User.Identity.IsAuthenticated)
+{
+    @if (User.IsInRole("Admin"))
     {
-        @if (User.IsInRole("Admin"))
-        {
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-                <div class="container-fluid">
-                    <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Project Advanced</a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin" aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarAdmin">
-                        <ul class="navbar-nav me-auto">
-                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Matches" asp-action="Index"><i class="fa fa-gamepad" aria-hidden="true"></i> Matches</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Tickets" asp-action="Index"><i class="fa fa-ticket-alt" aria-hidden="true"></i> Tickets</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Categories" asp-action="Index"><i class="fa fa-tags" aria-hidden="true"></i> Categories</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Stadium" asp-action="Index"><i class="fa fa-building" aria-hidden="true"></i> Stadiums</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Teams" asp-action="Index"><i class="fa fa-users" aria-hidden="true"></i> Teams</a></li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa fa-user-friends" aria-hidden="true"></i> People
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Captains" asp-action="Index">Captains</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Managers" asp-action="Index">Managers</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Project Advanced</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin" aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarAdmin">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Matches" asp-action="Index"><i class="fa fa-gamepad" aria-hidden="true"></i> Matches</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Tickets" asp-action="Index"><i class="fa fa-ticket-alt" aria-hidden="true"></i> Tickets</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Categories" asp-action="Index"><i class="fa fa-tags" aria-hidden="true"></i> Categories</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Stadium" asp-action="Index"><i class="fa fa-building" aria-hidden="true"></i> Stadiums</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Teams" asp-action="Index"><i class="fa fa-users" aria-hidden="true"></i> Teams</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-user-friends" aria-hidden="true"></i> People
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Captains" asp-action="Index">Captains</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Managers" asp-action="Index">Managers</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <form class="d-flex align-items-center" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                        <button type="submit" class="btn btn-danger btn-sm ms-3"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </form>
                 </div>
-                            <!-- Collapsible wrapper -->
-                            <partial name="_LoginPartial" />
-                        <!-- Container wrapper -->
-            </nav>  
-        }
+            </div>
+        </nav>
+    }
         else
         {
             <header>
