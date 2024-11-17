@@ -269,21 +269,39 @@ namespace project_new.Controllers
 
             return View(stadium);
         }
-        [Authorize(Roles = "Admin")]
+
         // POST: Stadium/Delete/5
+        [Authorize(Roles = "Admin")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var stadium = await _context.Stadium.FindAsync(id);
-            if (stadium != null)
+            if (stadium == null)
             {
-                _context.Stadium.Remove(stadium);
+                return NotFound();
             }
 
+            // Check if the stadium is referenced by any team
+            bool isReferencedByTeam = await _context.Teams.AnyAsync(t => t.StadiumId == id);
+
+            // Check if the stadium is referenced by any match
+            bool isReferencedByMatch = await _context.Match.AnyAsync(m => m.StadiumId == id);
+
+            if (isReferencedByTeam || isReferencedByMatch)
+            {
+                // Add an error message to the model state
+                ModelState.AddModelError(string.Empty, "This stadium cannot be deleted because it is referenced by a team or a match.");
+                return View(stadium); // Return the same view with the error message
+            }
+
+            // If no references exist, proceed with deletion
+            _context.Stadium.Remove(stadium);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private bool StadiumExists(int id)
         {
