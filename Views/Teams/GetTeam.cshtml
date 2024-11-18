@@ -8,9 +8,7 @@
         <!-- Left column for team logo and club info -->
         <div class="d-flex">
             <div class="p-2 flex-fill">
-                <a href="@Url.Action("TeamDetails", "Teams", new { teamId = team.Id })">
                     <img src="/img/@team.LogoUrl" class="img-fluid" style="max-height: 600px; max-width:600px;" alt="Team Logo">
-                </a>
             </div>
             <div class="p-2 flex-fill">
                 <h5 class="card-title">@team.Name</h5>
@@ -25,9 +23,9 @@
         <!-- Right column for stadium info -->
         <div class="d-flex">
             <div class="p-2 flex-fill">
-                <a href="@Url.Action("StadiumDetails", "Stadiums", new { stadiumId = stadium.Id })">
-                    <img src="/img/@stadium.BackPicUrl" class="card-img-top" alt="Stadium Background Image" style="max-height: 500px; max-width:500px;">
-                </a>
+
+                <img src="/img/@stadium.BackPicUrl" class="card-img-top" alt="Stadium Background Image" style="max-height: 500px; max-width:500px;">
+
                 <div class="p-2 flex-fill">
                     <h5 class="card-title">@stadium.Name</h5>
                     <p class="card-text">@stadium.Description</p>
