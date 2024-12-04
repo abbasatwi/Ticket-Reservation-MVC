@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using NuGet.ProjectModel;
 using project_new.Data;
 using project_new.Models;
 
@@ -57,10 +58,16 @@ namespace project_new.Controllers
         // GET: Teams/Create
         public IActionResult Create()
         {
-            ViewData["CaptainId"] = new SelectList(_context.Captain, "Id", "Id");
-            ViewData["ManagerId"] = new SelectList(_context.Manager, "Id", "Id");
-            ViewData["CaptainId"] = new SelectList(_context.Stadium, "Id", "Id");
+            PopulateViewData();
             return View();
+        }
+
+        // Helper method to populate ViewData for dropdowns
+        private void PopulateViewData()
+        {
+            ViewData["Manager"] = new SelectList(_context.Manager, "Id", "Name");
+            ViewData["Captain"] = new SelectList(_context.Captain, "Id", "Name");
+            ViewData["Stadium"] = new SelectList(_context.Stadium, "Id", "Name");
         }
 
         [HttpPost]
@@ -69,35 +76,77 @@ namespace project_new.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Check if a file is uploaded
-                if (logoFile != null && logoFile.Length > 0)
+                // Check for uniqueness of Manager, Captain, and Stadium
+                if (_context.Teams.Any(t => t.ManagerId == team.ManagerId))
                 {
-                    // Generate a unique file name
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(logoFile.FileName);
-
-                    // Save the file to wwwroot/Images directory
-                    string filePath = Path.Combine(_configuration.GetSection("FileManagement:SystemFileUploads").Value, fileName);
-
-
-                    // Save the file if it passed the malware scan
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await logoFile.CopyToAsync(fileStream);
-                    }
-
-                    // Set the file URL in the team model
-                    team.LogoUrl = fileName;
+                    ModelState.AddModelError("ManagerId", "The selected Manager is already assigned to another team.");
                 }
+                if (_context.Teams.Any(t => t.CaptainId == team.CaptainId))
+                {
+                    ModelState.AddModelError("CaptainId", "The selected Captain is already assigned to another team.");
+                }
+                if (_context.Teams.Any(t => t.StadiumId == team.StadiumId))
+                {
+                    ModelState.AddModelError("StadiumId", "The selected Stadium is already assigned to another team.");
+                }
+            }
 
+                // Validate Name
+                if (string.IsNullOrWhiteSpace(team.Name))
+            {
+                ModelState.AddModelError("Name", "The Name field is required.");
+            }
+            else if (team.Name.Length < 3)
+            {
+                ModelState.AddModelError("Name", "The Name must be at least 3 characters long.");
+            }
+
+            // Validate Description
+            if (string.IsNullOrWhiteSpace(team.Description))
+            {
+                ModelState.AddModelError("Description", "The Description field is required.");
+            }
+
+            // Validate Logo File
+            if (logoFile == null || logoFile.Length == 0)
+            {
+                ModelState.AddModelError("LogoUrl", "A logo file is required.");
+            }
+            else if (!IsImageFileValid(logoFile))
+            {
+                ModelState.AddModelError("LogoUrl", "The logo file must be a valid image format (JPEG, PNG).");
+            }
+
+            if (ModelState.IsValid)
+            {
+                // Handle logo file upload
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(logoFile.FileName);
+                string filePath = Path.Combine(_configuration.GetSection("FileManagement:SystemFileUploads").Value, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await logoFile.CopyToAsync(fileStream);
+                }
+                team.LogoUrl = fileName;
+
+                // Save team
                 _context.Add(team);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CaptainId"] = new SelectList(_context.Captain, "Id", "Id", team.CaptainId);
-            ViewData["ManagerId"] = new SelectList(_context.Manager, "Id", "Id", team.ManagerId);
+
+            // Repopulate dropdowns in case of an error
+            PopulateViewData();
             return View(team);
         }
 
+        // Helper Method to Validate Image Files
+        private bool IsImageFileValid(IFormFile file)
+        {
+            string[] validExtensions = { ".jpg", ".jpeg", ".png" };
+            string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            return validExtensions.Contains(fileExtension);
+        }
 
         // GET: Teams/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -106,15 +155,12 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
-
             var team = await _context.Teams.FindAsync(id);
             if (team == null)
             {
                 return NotFound();
             }
-            ViewData["CaptainId"] = new SelectList(_context.Captain, "Id", "Id", team.CaptainId);
-            ViewData["ManagerId"] = new SelectList(_context.Manager, "Id", "Id", team.ManagerId);
-            ViewData["CaptainId"] = new SelectList(_context.Stadium, "Id", "Id", team.CaptainId);
+            PopulateViewData();
             return View(team);
         }
 
@@ -123,17 +169,68 @@ namespace project_new.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,LogoUrl,ManagerId,CaptainId,StadiumId")] Team team)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,LogoUrl,ManagerId,CaptainId,StadiumId")] Team team,IFormFile logoFile)
         {
             if (id != team.Id)
             {
                 return NotFound();
+            }
+            if (ModelState.IsValid)
+            {
+                // Check for uniqueness of Manager, Captain, and Stadium
+                if (_context.Teams.Any(t => t.ManagerId == team.ManagerId))
+                {
+                    ModelState.AddModelError("ManagerId", "The selected Manager is already assigned to another team.");
+                }
+                if (_context.Teams.Any(t => t.CaptainId == team.CaptainId))
+                {
+                    ModelState.AddModelError("CaptainId", "The selected Captain is already assigned to another team.");
+                }
+                if (_context.Teams.Any(t => t.StadiumId == team.StadiumId))
+                {
+                    ModelState.AddModelError("StadiumId", "The selected Stadium is already assigned to another team.");
+                }
+            }
+
+            // Validate Name
+            if (string.IsNullOrWhiteSpace(team.Name))
+            {
+                ModelState.AddModelError("Name", "The Name field is required.");
+            }
+            else if (team.Name.Length < 3)
+            {
+                ModelState.AddModelError("Name", "The Name must be at least 3 characters long.");
+            }
+
+            // Validate Description
+            if (string.IsNullOrWhiteSpace(team.Description))
+            {
+                ModelState.AddModelError("Description", "The Description field is required.");
+            }
+
+            // Validate Logo File
+            if (logoFile == null || logoFile.Length == 0)
+            {
+                ModelState.AddModelError("LogoUrl", "A logo file is required.");
+            }
+            else if (!IsImageFileValid(logoFile))
+            {
+                ModelState.AddModelError("LogoUrl", "The logo file must be a valid image format (JPEG, PNG).");
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Handle logo file upload
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(logoFile.FileName);
+                    string filePath = Path.Combine(_configuration.GetSection("FileManagement:SystemFileUploads").Value, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await logoFile.CopyToAsync(fileStream);
+                    }
+                    team.LogoUrl = fileName;
                     _context.Update(team);
                     await _context.SaveChangesAsync();
                 }
@@ -150,9 +247,7 @@ namespace project_new.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CaptainId"] = new SelectList(_context.Captain, "Id", "Id", team.CaptainId);
-            ViewData["ManagerId"] = new SelectList(_context.Manager, "Id", "Id", team.ManagerId);
-            ViewData["CaptainId"] = new SelectList(_context.Stadium, "Id", "Id", team.CaptainId);
+            PopulateViewData();
             return View(team);
         }
 

@@ -11,7 +11,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
@@ -26,22 +26,22 @@
             </div>
             <div class="form-group">
                 <label asp-for="LogoUrl" class="control-label"></label>
-                <input asp-for="LogoUrl" class="form-control" />
+                <input type="file" name="logoFile" class="form-control" />
                 <span asp-validation-for="LogoUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="ManagerId" class="control-label"></label>
-                <select asp-for="ManagerId" class="form-control" asp-items="ViewBag.ManagerId"></select>
+                <select asp-for="ManagerId" class="form-control" asp-items="ViewBag.Manager"></select>
                 <span asp-validation-for="ManagerId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CaptainId" class="control-label"></label>
-                <select asp-for="CaptainId" class="form-control" asp-items="ViewBag.CaptainId"></select>
+                <select asp-for="CaptainId" class="form-control" asp-items="ViewBag.Captain"></select>
                 <span asp-validation-for="CaptainId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="StadiumId" class="control-label"></label>
-                <input asp-for="StadiumId" class="form-control" />
+                <select asp-for="StadiumId" class="form-control" asp-items="ViewBag.Stadium"></select>
                 <span asp-validation-for="StadiumId" class="text-danger"></span>
             </div>
             <div class="form-group">

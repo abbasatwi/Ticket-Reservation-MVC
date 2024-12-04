@@ -34,19 +34,21 @@
                 <span asp-validation-for="Location" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="PicUrl" class="control-label"></label>
-                <input type="file" name="Picfile" class="form-control" />
+                <label>Picture</label>
+                <input type="file" name="picFile" class="form-control" />
                 <span asp-validation-for="PicUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="BackPicUrl" class="control-label"></label>
-                <input type="file" name="BackPicfile" class="form-control" />
+                <label>Background Picture</label>
+                <input type="file" name="backPicFile" class="form-control" />
                 <span asp-validation-for="BackPicUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
+            <small class="text-muted">Acceptable formats: JPEG, PNG. Max size: 5MB.</small>
         </form>
+
     </div>
 </div>
 

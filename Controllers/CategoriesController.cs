@@ -48,7 +48,7 @@ namespace project_new.Controllers
         // GET: Categories/Create
         public IActionResult Create()
         {
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id");
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name");
             return View();
         }
 
@@ -65,7 +65,7 @@ namespace project_new.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id", category.ParentCategoryId);
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name", category.ParentCategoryId);
             return View(category);
         }
 
@@ -82,7 +82,7 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id", category.ParentCategoryId);
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name", category.ParentCategoryId);
             return View(category);
         }
 
@@ -118,7 +118,7 @@ namespace project_new.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id", category.ParentCategoryId);
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name", category.ParentCategoryId);
             return View(category);
         }
 

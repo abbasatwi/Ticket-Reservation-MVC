@@ -36,13 +36,23 @@
             </div>
             <div class="form-group">
                 <label asp-for="PicUrl" class="control-label"></label>
-                <input type="file" name="Picfile" class="form-control" />
+                <input type="file" name="picFile" class="form-control" />
+                <input type="hidden" asp-for="PicUrl" />
                 <span asp-validation-for="PicUrl" class="text-danger"></span>
+                @if (!string.IsNullOrEmpty(Model.PicUrl))
+                {
+                    <img src="@Url.Content("~/uploads/" + Model.PicUrl)" alt="Current Picture" width="150" />
+                }
             </div>
             <div class="form-group">
                 <label asp-for="BackPicUrl" class="control-label"></label>
-                <input type="file" name="BackPicfile" class="form-control" />
+                <input type="hidden" asp-for="BackPicUrl" />
+                <input type="file" name="backPicFile" class="form-control" />
                 <span asp-validation-for="BackPicUrl" class="text-danger"></span>
+                @if (!string.IsNullOrEmpty(Model.BackPicUrl))
+                {
+                    <img src="@Url.Content("~/uploads/" + Model.BackPicUrl)" alt="Background Picture" width="150" />
+                }
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

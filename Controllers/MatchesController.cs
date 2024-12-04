@@ -53,12 +53,13 @@ namespace project_new.Controllers
         // GET: Matches/Create
         public IActionResult Create()
         {
-            ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Id");
-            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Id");
-            ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Id");
-            ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Id");
+            ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
+            ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Name");
+            ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Name");
             return View();
         }
+
 
         // POST: Matches/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -69,22 +70,52 @@ namespace project_new.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Check if an image file is uploaded
+                if (match.HomeTeamId == match.AwayTeamId)
+                {
+                    ModelState.AddModelError("AwayTeamId", "A team cannot play against itself.");
+                }
+                // Validate match date
+                if (match.MatchDate < DateTime.Today)
+                {
+                    ModelState.AddModelError("MatchDate", "Match date cannot be in the past.");
+                }
+
+                // Validate same stadium on the same day
+                bool isStadiumConflict = _context.Match.Any(m => m.StadiumId == match.StadiumId && m.MatchDate == match.MatchDate);
+                if (isStadiumConflict)
+                {
+                    ModelState.AddModelError("StadiumId", "Another match is already scheduled in this stadium on the same day.");
+                }
+
+                // Validate same team on the same day
+                bool isTeamConflict = _context.Match.Any(m =>
+                    (m.HomeTeamId == match.HomeTeamId || m.AwayTeamId == match.HomeTeamId || m.HomeTeamId == match.AwayTeamId || m.AwayTeamId == match.AwayTeamId) &&
+                    m.MatchDate == match.MatchDate);
+
+                if (isTeamConflict)
+                {
+                    ModelState.AddModelError("", "One or both teams have a match scheduled on the same day.");
+                }
+
+                // Check if there were validation errors
+                if (!ModelState.IsValid)
+                {
+                    // Repopulate dropdowns and return view
+                    PopulateDropdowns(match);
+                    return View(match);
+                }
+
+                // Handle image upload
                 if (matchUrl != null && matchUrl.Length > 0)
                 {
-                    // Generate a unique file name
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(matchUrl.FileName);
+                    string filePath = Path.Combine(_configuration.GetValue<string>("FileManagement:SystemFileUploads"), fileName);
 
-                    // Save the file to a directory
-                    string filePath = Path.Combine(_configuration.GetSection("FileManagement:SystemFileUploads").Value, fileName);
-
-                    // Save the file
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
                         await matchUrl.CopyToAsync(fileStream);
                     }
 
-                    // Set the file URL in the match model
                     match.MatchUrl = fileName;
                 }
 
@@ -93,12 +124,18 @@ namespace project_new.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Populate the dropdown lists with meaningful data
+            // Populate dropdowns for re-rendering form
+            PopulateDropdowns(match);
+            return View(match);
+        }
+
+        // Utility method for dropdowns
+        private void PopulateDropdowns(Match match)
+        {
             ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Name", match.AwayTeamId);
             ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name", match.CategoryId);
             ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Name", match.HomeTeamId);
             ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Name", match.StadiumId);
-            return View(match);
         }
 
 
@@ -115,10 +152,7 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
-            ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Id", match.AwayTeamId);
-            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Id", match.CategoryId);
-            ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Id", match.HomeTeamId);
-            ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Id", match.StadiumId);
+            PopulateDropdowns(match);
             return View(match);
         }
 
@@ -138,7 +172,41 @@ namespace project_new.Controllers
             {
                 try
                 {
-                    _context.Update(match);
+                    if (match.HomeTeamId == match.AwayTeamId)
+                    {
+                        ModelState.AddModelError("AwayTeamId", "A team cannot play against itself.");
+                    }
+                    // Validate match date
+                    if (match.MatchDate < DateTime.Today)
+                        {
+                            ModelState.AddModelError("MatchDate", "Match date cannot be in the past.");
+                        }
+
+                        // Validate same stadium on the same day
+                        bool isStadiumConflict = _context.Match.Any(m => m.StadiumId == match.StadiumId && m.MatchDate == match.MatchDate);
+                        if (isStadiumConflict)
+                        {
+                            ModelState.AddModelError("StadiumId", "Another match is already scheduled in this stadium on the same day.");
+                        }
+
+                        // Validate same team on the same day
+                        bool isTeamConflict = _context.Match.Any(m =>
+                            (m.HomeTeamId == match.HomeTeamId || m.AwayTeamId == match.HomeTeamId || m.HomeTeamId == match.AwayTeamId || m.AwayTeamId == match.AwayTeamId) &&
+                            m.MatchDate == match.MatchDate);
+
+                        if (isTeamConflict)
+                        {
+                            ModelState.AddModelError("", "One or both teams have a match scheduled on the same day.");
+                        }
+
+                        // Check if there were validation errors
+                        if (!ModelState.IsValid)
+                        {
+                            // Repopulate dropdowns and return view
+                            PopulateDropdowns(match);
+                            return View(match);
+                        }
+                        _context.Update(match);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -154,10 +222,7 @@ namespace project_new.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Id", match.AwayTeamId);
-            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Id", match.CategoryId);
-            ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Id", match.HomeTeamId);
-            ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Id", match.StadiumId);
+            PopulateDropdowns(match);
             return View(match);
         }
 

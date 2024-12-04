@@ -66,11 +66,29 @@ namespace project_new.Controllers
         public async Task<IActionResult> Create([Bind("Id,Name,Description,Capacity,Location,PicUrl,BackPicUrl")] Stadium stadium, IFormFile picFile, IFormFile backPicFile)
         {
             var path = $"{_configuration.GetSection("FileManagement:SystemFileUploads").Value}";
+
+            // Early validation for file upload
+            if (picFile == null && string.IsNullOrEmpty(stadium.PicUrl))
+            {
+                ModelState.AddModelError("PicUrl", "The Picture file is required.");
+            }
+
+            if (backPicFile == null && string.IsNullOrEmpty(stadium.BackPicUrl))
+            {
+                ModelState.AddModelError("BackPicUrl", "The Background Picture file is required.");
+            }
+
+            // Return view if model state is invalid
+            if (!ModelState.IsValid)
+            {
+                return View(stadium);
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Check if a file is uploaded for PicUrl
+                    // File processing for PicUrl
                     if (picFile != null && picFile.Length > 0)
                     {
                         string picFileName = Guid.NewGuid().ToString() + Path.GetExtension(picFile.FileName);
@@ -90,7 +108,7 @@ namespace project_new.Controllers
                         stadium.PicUrl = picFileName;
                     }
 
-                    // Check if a file is uploaded for BackPicUrl
+                    // File processing for BackPicUrl
                     if (backPicFile != null && backPicFile.Length > 0)
                     {
                         string backPicFileName = Guid.NewGuid().ToString() + Path.GetExtension(backPicFile.FileName);
@@ -110,6 +128,7 @@ namespace project_new.Controllers
                         stadium.BackPicUrl = backPicFileName;
                     }
 
+                    // Save the stadium entity to the database
                     _context.Add(stadium);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
@@ -120,8 +139,10 @@ namespace project_new.Controllers
                     return View(stadium);
                 }
             }
+
             return View(stadium);
         }
+
 
 
         // Helper method to scan the file for malware
@@ -192,6 +213,23 @@ namespace project_new.Controllers
                 return NotFound();
             }
 
+            // Early validation for file upload
+            if (picFile == null && string.IsNullOrEmpty(stadium.PicUrl))
+            {
+                ModelState.AddModelError("PicUrl", "The Picture file is required.");
+            }
+
+            if (backPicFile == null && string.IsNullOrEmpty(stadium.BackPicUrl))
+            {
+                ModelState.AddModelError("BackPicUrl", "The Background Picture file is required.");
+            }
+
+            // Return view if model state is invalid
+            if (!ModelState.IsValid)
+            {
+                return View(stadium);
+            }
+
             try
             {
                 // Check if a file is uploaded for PicUrl
@@ -248,8 +286,10 @@ namespace project_new.Controllers
                     throw;
                 }
             }
+
             return RedirectToAction(nameof(Index));
         }
+
 
         [Authorize(Roles = "Admin")]
         // GET: Stadium/Delete/5
