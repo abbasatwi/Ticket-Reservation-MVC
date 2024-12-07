@@ -37,7 +37,7 @@
     {
         @if (User.IsInRole("Admin"))
         {
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" style="color : black">
                 <div class="container-fluid">
                     <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Project Advanced</a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin" aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,8 +60,8 @@
                                 </ul>
                             </li>
                         </ul>
-                        <form class="d-flex align-items-center" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                            <button type="submit" class="btn btn-danger btn-sm ms-3"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout">
+                            <button style="background-color : brown" type="submit" class="nav-link btn btn-link text-dark">Logout</button>
                         </form>
                     </div>
                 </div>

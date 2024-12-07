@@ -169,87 +169,92 @@ namespace project_new.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,LogoUrl,ManagerId,CaptainId,StadiumId")] Team team,IFormFile logoFile)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,LogoUrl,ManagerId,CaptainId,StadiumId")] Team team, IFormFile logoFile)
         {
             if (id != team.Id)
             {
                 return NotFound();
             }
+
             if (ModelState.IsValid)
             {
-                // Check for uniqueness of Manager, Captain, and Stadium
-                if (_context.Teams.Any(t => t.ManagerId == team.ManagerId))
+                // Allow Manager, Captain, and Stadium to belong to the current team
+                if (_context.Teams.Any(t => t.ManagerId == team.ManagerId && t.Id != team.Id))
                 {
                     ModelState.AddModelError("ManagerId", "The selected Manager is already assigned to another team.");
                 }
-                if (_context.Teams.Any(t => t.CaptainId == team.CaptainId))
+                if (_context.Teams.Any(t => t.CaptainId == team.CaptainId && t.Id != team.Id))
                 {
                     ModelState.AddModelError("CaptainId", "The selected Captain is already assigned to another team.");
                 }
-                if (_context.Teams.Any(t => t.StadiumId == team.StadiumId))
+                if (_context.Teams.Any(t => t.StadiumId == team.StadiumId && t.Id != team.Id))
                 {
                     ModelState.AddModelError("StadiumId", "The selected Stadium is already assigned to another team.");
                 }
-            }
 
-            // Validate Name
-            if (string.IsNullOrWhiteSpace(team.Name))
-            {
-                ModelState.AddModelError("Name", "The Name field is required.");
-            }
-            else if (team.Name.Length < 3)
-            {
-                ModelState.AddModelError("Name", "The Name must be at least 3 characters long.");
-            }
-
-            // Validate Description
-            if (string.IsNullOrWhiteSpace(team.Description))
-            {
-                ModelState.AddModelError("Description", "The Description field is required.");
-            }
-
-            // Validate Logo File
-            if (logoFile == null || logoFile.Length == 0)
-            {
-                ModelState.AddModelError("LogoUrl", "A logo file is required.");
-            }
-            else if (!IsImageFileValid(logoFile))
-            {
-                ModelState.AddModelError("LogoUrl", "The logo file must be a valid image format (JPEG, PNG).");
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
+                // Validate Name
+                if (string.IsNullOrWhiteSpace(team.Name))
                 {
-                    // Handle logo file upload
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(logoFile.FileName);
-                    string filePath = Path.Combine(_configuration.GetSection("FileManagement:SystemFileUploads").Value, fileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await logoFile.CopyToAsync(fileStream);
-                    }
-                    team.LogoUrl = fileName;
-                    _context.Update(team);
-                    await _context.SaveChangesAsync();
+                    ModelState.AddModelError("Name", "The Name field is required.");
                 }
-                catch (DbUpdateConcurrencyException)
+                else if (team.Name.Length < 3)
                 {
-                    if (!TeamExists(team.Id))
+                    ModelState.AddModelError("Name", "The Name must be at least 3 characters long.");
+                }
+
+                // Validate Description
+                if (string.IsNullOrWhiteSpace(team.Description))
+                {
+                    ModelState.AddModelError("Description", "The Description field is required.");
+                }
+
+                // Validate Logo File
+                if (logoFile != null && logoFile.Length > 0)
+                {
+                    if (!IsImageFileValid(logoFile))
                     {
-                        return NotFound();
+                        ModelState.AddModelError("LogoUrl", "The logo file must be a valid image format (JPEG, PNG).");
                     }
                     else
                     {
-                        throw;
+                        // Handle logo file upload
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(logoFile.FileName);
+                        string filePath = Path.Combine(_configuration.GetSection("FileManagement:SystemFileUploads").Value, fileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await logoFile.CopyToAsync(fileStream);
+                        }
+                        team.LogoUrl = fileName;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+
+                if (ModelState.IsValid)
+                {
+                    try
+                    {
+                        _context.Update(team);
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        if (!TeamExists(team.Id))
+                        {
+                            return NotFound();
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                    return RedirectToAction(nameof(Index));
+                }
             }
+
             PopulateViewData();
             return View(team);
         }
+
 
         // GET: Teams/Delete/5
         public async Task<IActionResult> Delete(int? id)
