@@ -11,7 +11,8 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <!-- Add enctype="multipart/form-data" to the form to support file uploads -->
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="HomeTeam" class="control-label"></label>
@@ -25,9 +26,10 @@
                 <span asp-validation-for="AwayTeamId" class="text-danger"></span>
             </div>
 
+            <!-- Use asp-for to bind the file input to the model -->
             <div class="form-group">
                 <label asp-for="MatchUrl" class="control-label"></label>
-                <input type="file" name="MatchUrl" accept=".jpg,.jpeg,.png" class="form-control" />
+                <input asp-for="MatchUrl" type="file" class="form-control" />
                 <span asp-validation-for="MatchUrl" class="text-danger"></span>
             </div>
 
@@ -60,5 +62,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

@@ -74,6 +74,12 @@ namespace project_new.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,LogoUrl,ManagerId,CaptainId,StadiumId")] Team team, IFormFile logoFile)
         {
+            var relativePath = _configuration["FileManagement:SystemFileUploads"];
+            var path = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
             if (ModelState.IsValid)
             {
                 // Check for uniqueness of Manager, Captain, and Stadium
@@ -171,6 +177,12 @@ namespace project_new.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,LogoUrl,ManagerId,CaptainId,StadiumId")] Team team, IFormFile logoFile)
         {
+            var relativePath = _configuration["FileManagement:SystemFileUploads"];
+            var path = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
             if (id != team.Id)
             {
                 return NotFound();

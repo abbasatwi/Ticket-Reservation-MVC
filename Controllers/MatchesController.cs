@@ -53,41 +53,107 @@ namespace project_new.Controllers
         // GET: Matches/Create
         public IActionResult Create()
         {
-            PopulateDropdowns();
+            ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
+            ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Name");
+            ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Name");
             return View();
         }
 
+
         // POST: Matches/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,HomeTeamId,AwayTeamId,MatchDate,StadiumId,CategoryId")] Match match, IFormFile matchUrl)
         {
+            var relativePath = _configuration["FileManagement:SystemFileUploads"];
+            var path = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
             if (ModelState.IsValid)
             {
-                // Validation logic
-                ValidateMatch(match);
+                if (match.HomeTeamId == match.AwayTeamId)
+                {
+                    ModelState.AddModelError("AwayTeamId", "A team cannot play against itself.");
+                }
+                // Validate match date
+                if (match.MatchDate < DateTime.Today)
+                {
+                    ModelState.AddModelError("MatchDate", "Match date cannot be in the past.");
+                }
 
+                // Validate same stadium on the same day
+                bool isStadiumConflict = _context.Match.Any(m => m.StadiumId == match.StadiumId && m.MatchDate == match.MatchDate);
+                if (isStadiumConflict)
+                {
+                    ModelState.AddModelError("StadiumId", "Another match is already scheduled in this stadium on the same day.");
+                }
+
+                // Validate same team on the same day
+                bool isTeamConflict = _context.Match.Any(m =>
+                    (m.HomeTeamId == match.HomeTeamId || m.AwayTeamId == match.HomeTeamId || m.HomeTeamId == match.AwayTeamId || m.AwayTeamId == match.AwayTeamId) &&
+                    m.MatchDate == match.MatchDate);
+
+                if (isTeamConflict)
+                {
+                    ModelState.AddModelError("", "One or both teams have a match scheduled on the same day.");
+                }
+
+                // Check if there were validation errors
                 if (!ModelState.IsValid)
                 {
-                    PopulateDropdowns();
+                    // Repopulate dropdowns and return view
+                    PopulateDropdowns(match);
                     return View(match);
                 }
 
-                // Handle file upload
-                match.MatchUrl = await SaveFileAsync(matchUrl);
+                // Handle image upload
+                if (matchUrl != null && matchUrl.Length > 0)
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(matchUrl.FileName);
+                    string filePath = Path.Combine(_configuration.GetValue<string>("FileManagement:SystemFileUploads"), fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await matchUrl.CopyToAsync(fileStream);
+                    }
+
+                    match.MatchUrl = fileName;
+                }
 
                 _context.Add(match);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
-            PopulateDropdowns();
+            // Populate dropdowns for re-rendering form
+            PopulateDropdowns(match);
             return View(match);
         }
+
+        // Utility method for dropdowns
+        private void PopulateDropdowns(Match match)
+        {
+            ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Name", match.AwayTeamId);
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name", match.CategoryId);
+            ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Name", match.HomeTeamId);
+            ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Name", match.StadiumId);
+        }
+
 
         // GET: Matches/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            var relativePath = _configuration["FileManagement:SystemFileUploads"];
+            var path = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
             if (id == null)
             {
                 return NotFound();
@@ -98,12 +164,10 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
-
-            PopulateDropdowns();
+            PopulateDropdowns(match);
             return View(match);
         }
 
-        // POST: Matches/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,HomeTeamId,AwayTeamId,MatchUrl,MatchDate,StadiumId,CategoryId")] Match match, IFormFile matchUrl)
@@ -112,30 +176,59 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
-
+            
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Validation logic
-                    ValidateMatch(match);
-
-                    if (!ModelState.IsValid)
+                    if (match.HomeTeamId == match.AwayTeamId)
                     {
-                        PopulateDropdowns();
-                        return View(match);
+                        ModelState.AddModelError("AwayTeamId", "A team cannot play against itself.");
+                    }
+                    // Validate match date
+                    if (match.MatchDate < DateTime.Today)
+                    {
+                        ModelState.AddModelError("MatchDate", "Match date cannot be in the past.");
                     }
 
-                    // Handle file upload or retain existing URL
+                    // Validate same stadium on the same day, excluding the current match
+                    bool isStadiumConflict = _context.Match
+                        .Any(m => m.StadiumId == match.StadiumId && m.MatchDate == match.MatchDate && m.Id != match.Id); // Exclude current match by Id
+                    if (isStadiumConflict)
+                    {
+                        ModelState.AddModelError("StadiumId", "Another match is already scheduled in this stadium on the same day.");
+                    }
+
+                    // Validate same team on the same day, excluding the current match
+                    bool isTeamConflict = _context.Match.Any(m =>
+                        (m.HomeTeamId == match.HomeTeamId || m.AwayTeamId == match.HomeTeamId || m.HomeTeamId == match.AwayTeamId || m.AwayTeamId == match.AwayTeamId) &&
+                        m.MatchDate == match.MatchDate && m.Id != match.Id); // Exclude current match by Id
+
+                    if (isTeamConflict)
+                    {
+                        ModelState.AddModelError("", "One or both teams have a match scheduled on the same day.");
+                    }
+
+                    // If a new matchUrl is uploaded, save it
                     if (matchUrl != null && matchUrl.Length > 0)
                     {
-                        match.MatchUrl = await SaveFileAsync(matchUrl);
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(matchUrl.FileName);
+                        string filePath = Path.Combine(_configuration.GetValue<string>("FileManagement:SystemFileUploads"), fileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await matchUrl.CopyToAsync(fileStream);
+                        }
+
+                        match.MatchUrl = fileName; // Set the new matchUrl
                     }
-                    else
+                    else if (string.IsNullOrEmpty(match.MatchUrl)) // Retain the existing image if no new image is provided
                     {
-                        _context.Entry(match).Property(m => m.MatchUrl).IsModified = false;
+                        var existingMatch = await _context.Match.FindAsync(id);
+                        match.MatchUrl = existingMatch?.MatchUrl; // Keep the existing image
                     }
 
+                    // Save the updated match record
                     _context.Update(match);
                     await _context.SaveChangesAsync();
                 }
@@ -150,11 +243,14 @@ namespace project_new.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
-            PopulateDropdowns();
+            PopulateDropdowns(match);
             return View(match);
         }
+
+
 
         // GET: Matches/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -197,77 +293,79 @@ namespace project_new.Controllers
         {
             return _context.Match.Any(e => e.Id == id);
         }
-
-        // Helper: Populate dropdowns
-        private void PopulateDropdowns()
+        public async Task<IActionResult> MatchDetails(int matchId)
         {
-            ViewData["AwayTeamId"] = new SelectList(_context.Teams, "Id", "Name");
-            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
-            ViewData["HomeTeamId"] = new SelectList(_context.Teams, "Id", "Name");
-            ViewData["StadiumId"] = new SelectList(_context.Stadium, "Id", "Name");
-        }
-
-        // Helper: File upload
-        private async Task<string> SaveFileAsync(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return null;
-
-            var relativePath = _configuration["FileManagement:SystemFileUploads"];
-            var path = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
-
-            if (!Directory.Exists(path))
+            try
             {
-                Directory.CreateDirectory(path);
+                // Retrieve the match from the database using EF Core
+                var match = await _context.Match
+                    .Include(m => m.HomeTeam)
+                    .Include(m => m.AwayTeam)
+                    .Include(m => m.Stadium)
+                    .Include(m => m.Category)
+                    .FirstOrDefaultAsync(m => m.Id == matchId);
+
+                if (match == null)
+                {
+                    // If the match with the specified ID is not found, return a 404 Not Found response
+                    return NotFound();
+                }
+
+                // Retrieve the tickets for the match from the database using EF Core
+                var tickets = await _context.Ticket
+                    .Where(t => t.MatchId == matchId)
+                    .ToListAsync();
+
+                // Calculate total tickets available
+                int totalTicketsAvailable = tickets.Where(t => t.TicketStatus == "Available").Sum(t => t.Quantity);
+
+
+                // Determine the starting price of the tickets
+                decimal startingPrice = tickets.Any() ? tickets.Min(t => t.Price) : 0; // Default to 0 if no tickets are available
+
+                // Pass the retrieved match, tickets, total tickets available, and starting price to the view using ViewBag
+                ViewBag.Match = match;
+                ViewBag.Tickets = tickets;
+                ViewBag.TotalAvailableTickets = totalTicketsAvailable;
+                ViewBag.StartingPrice = startingPrice;
+
+                // Return the view
+                return View("MatchDetails");
             }
-
-            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            string filePath = Path.Combine(path, fileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            catch (Exception ex)
             {
-                await file.CopyToAsync(fileStream);
-            }
-
-            return fileName;
-        }
-
-        // Helper: Validation logic
-        private void ValidateMatch(Match match)
-        {
-            if (match.HomeTeamId == match.AwayTeamId)
-            {
-                ModelState.AddModelError("AwayTeamId", "A team cannot play against itself.");
-            }
-
-            if (match.MatchDate < DateTime.Today)
-            {
-                ModelState.AddModelError("MatchDate", "Match date cannot be in the past.");
-            }
-
-            // Exclude the current match ID from stadium conflict check
-            bool isStadiumConflict = _context.Match.Any(m =>
-                m.StadiumId == match.StadiumId &&
-                m.MatchDate == match.MatchDate &&
-                m.Id != match.Id); // Exclude current match
-            if (isStadiumConflict)
-            {
-                ModelState.AddModelError("StadiumId", "Another match is already scheduled in this stadium on the same day.");
-            }
-
-            // Exclude the current match ID from team conflict check
-            bool isTeamConflict = _context.Match.Any(m =>
-                m.Id != match.Id && // Exclude current match
-                m.MatchDate == match.MatchDate &&
-                (m.HomeTeamId == match.HomeTeamId ||
-                 m.AwayTeamId == match.HomeTeamId ||
-                 m.HomeTeamId == match.AwayTeamId ||
-                 m.AwayTeamId == match.AwayTeamId));
-
-            if (isTeamConflict)
-            {
-                ModelState.AddModelError("", "One or both teams have a match scheduled on the same day.");
+                // Handle any exceptions that occur during the execution
+                // For example, log the exception or return an appropriate error response
+                return StatusCode(500, ex.Message);
             }
         }
+        public IActionResult Search(string searchTerm)
+        {
+            // Check if the search term is null or empty
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                ViewBag.Message = "No results found. Please enter a search term.";
+                return View("SearchResults", new List<Match>()); // Return an empty list
+            }
+
+            // Perform search logic based on the searchTerm
+            var matches = _context.Match
+                .Include(m => m.HomeTeam)
+                .Include(m => m.AwayTeam)
+                .Include(m => m.Stadium)
+                .Include(m => m.Category)
+                .Where(m => m.HomeTeam.Name.Contains(searchTerm) || m.AwayTeam.Name.Contains(searchTerm))
+                .ToList();
+
+            // Check if no matches are found
+            if (matches == null || !matches.Any())
+            {
+                ViewBag.Message = "No matches found for the provided search term.";
+            }
+
+            return View("SearchResults", matches);
+        }
+
+
     }
 }

@@ -217,6 +217,12 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
+            var relativePath = _configuration["FileManagement:SystemFileUploads"];
+            var path = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
 
             // Early validation for file upload
             if (picFile == null && string.IsNullOrEmpty(stadium.PicUrl))

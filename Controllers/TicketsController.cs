@@ -18,7 +18,6 @@ using Stripe.Checkout;
 
 namespace project_new.Controllers
 {
-    [Authorize(Roles = "Admin")]
     public class TicketsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -33,6 +32,7 @@ namespace project_new.Controllers
         }
 
         // GET: Tickets
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Ticket.Include(t => t.Match);
@@ -40,6 +40,7 @@ namespace project_new.Controllers
         }
 
         // GET: Tickets/Details/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -59,6 +60,7 @@ namespace project_new.Controllers
         }
 
         // GET: Tickets/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["MatchId"] = new SelectList(
@@ -76,6 +78,7 @@ namespace project_new.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,MatchId,TicketStatus,Quantity,Price,Section,QRCode")] Ticket ticket)
         {
@@ -102,6 +105,7 @@ namespace project_new.Controllers
 
 
         // GET: Tickets/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -130,6 +134,7 @@ namespace project_new.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,MatchId,TicketStatus,Quantity,Price,Section,QRCode")] Ticket ticket)
         {
@@ -169,6 +174,7 @@ _context.Match.Select(m => new
         }
 
         // GET: Tickets/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -189,6 +195,7 @@ _context.Match.Select(m => new
 
         // POST: Tickets/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
