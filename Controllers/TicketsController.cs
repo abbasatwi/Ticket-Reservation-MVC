@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ using Stripe.Checkout;
 
 namespace project_new.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class TicketsController : Controller
     {
         private readonly ApplicationDbContext _context;

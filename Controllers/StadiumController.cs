@@ -65,7 +65,12 @@ namespace project_new.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,Capacity,Location,PicUrl,BackPicUrl")] Stadium stadium, IFormFile picFile, IFormFile backPicFile)
         {
-            var path = $"{_configuration.GetSection("FileManagement:SystemFileUploads").Value}";
+            var relativePath = _configuration["FileManagement:SystemFileUploads"];
+            var path = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
 
             // Early validation for file upload
             if (picFile == null && string.IsNullOrEmpty(stadium.PicUrl))
