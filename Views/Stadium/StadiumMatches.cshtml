@@ -6,9 +6,7 @@
 <div class="container">
     <div class="d-flex">
         <div class="p-2 flex-fill">
-            <a href="@Url.Action("StadiumDetails", "Stadiums", new { stadiumId = stadium.Id })">
                 <img src="/img/@stadium.BackPicUrl" class="img-fluid lazyload" style="max-height: 500px; max-width:500px;" alt="Background Image">
-            </a>
         </div>
         <div class="p-2 flex-fill">
             <h5 class="card-title">@stadium.Name</h5>
@@ -44,9 +42,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <a href="@Url.Action("StadiumDetails", "Stadiums", new { stadiumId = stadium.Id })">
-                <img src="/img/@stadium.PicUrl" class="img-fluid lazyload" alt="Stadium Image" style="height: 300px; width: 300px;">
-            </a>
+            <img src="/img/@stadium.PicUrl" class="img-fluid lazyload" alt="Stadium Image" style="height: 300px; width: 300px;">
         </div>
     </div>
 </div>

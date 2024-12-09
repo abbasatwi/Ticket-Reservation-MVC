@@ -14,6 +14,26 @@
         width: 100%;
         height: 100%;
     }
+
+    #matchCarousel {
+        position: relative;
+    }
+
+    /* Adjust the next icon */
+    .carousel-control-next {
+        position: absolute;
+        top: 50%;
+        right: -40px; /* Adjust as needed */
+        transform: translateY(-50%);
+    }
+
+    /* Adjust the prev icon */
+    .carousel-control-prev {
+        position: absolute;
+        top: 50%;
+        left: -40px; /* Adjust as needed */
+        transform: translateY(-50%);
+    }
 </style>
 
 <div class="carousel-title">Most Popular Stadiums</div>
@@ -62,7 +82,7 @@
                 {
                     <div class="card">
                         <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })">
-                            <img src="/img/@match.MatchUrl" class="card-img-top lazyload" alt="Match Image" loading="lazy">
+                            <img src="/img/@match.MatchUrl" class="card-img-top lazyload" alt="Match Image">
                         </a>
                         <div class="card-body">
                             <h5 class="card-title">@match.HomeTeam.Name vs @match.AwayTeam.Name</h5>

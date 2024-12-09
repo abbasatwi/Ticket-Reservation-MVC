@@ -59,7 +59,14 @@ namespace project_new.Controllers
         // GET: Tickets/Create
         public IActionResult Create()
         {
-            ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id");
+            ViewData["MatchId"] = new SelectList(
+                _context.Match.Select(m => new
+                {
+                    m.Id,
+                    Display = $"{m.HomeTeam.Name} vs {m.AwayTeam.Name} - {m.MatchDate:yyyy-MM-dd}"
+                }),
+                "Id", "Display");
+
             return View();
         }
 
@@ -76,9 +83,21 @@ namespace project_new.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id", ticket.MatchId);
+
+            // Re-populate the MatchId dropdown
+            ViewData["MatchId"] = new SelectList(
+                _context.Match.Select(m => new
+                {
+                    m.Id,
+                    Display = $"{m.HomeTeam.Name} vs {m.AwayTeam.Name} - {m.MatchDate:yyyy-MM-dd}"
+                }),
+                "Id",
+                "Display",
+                ticket.MatchId);
+
             return View(ticket);
         }
+
 
         // GET: Tickets/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -93,7 +112,15 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
-            ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id", ticket.MatchId);
+
+            ViewData["MatchId"] = new SelectList(
+                _context.Match.Select(m => new
+                {
+                    m.Id,
+                    Display = $"{m.HomeTeam.Name} vs {m.AwayTeam.Name} - {m.MatchDate:yyyy-MM-dd}"
+                }),
+                "Id", "Display", ticket.MatchId);
+
             return View(ticket);
         }
 
@@ -129,7 +156,13 @@ namespace project_new.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id", ticket.MatchId);
+            ViewData["MatchId"] = new SelectList(
+_context.Match.Select(m => new
+{
+    m.Id,
+    Display = $"{m.HomeTeam.Name} vs {m.AwayTeam.Name} - {m.MatchDate:yyyy-MM-dd}"
+}),
+"Id", "Display", ticket.MatchId);
             return View(ticket);
         }
 

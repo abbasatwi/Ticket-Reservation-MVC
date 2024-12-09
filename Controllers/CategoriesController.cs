@@ -48,7 +48,7 @@ namespace project_new.Controllers
         // GET: Categories/Create
         public IActionResult Create()
         {
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id");
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name");
             return View();
         }
 
@@ -65,7 +65,7 @@ namespace project_new.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id", category.ParentCategoryId);
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name", category.ParentCategoryId);
             return View(category);
         }
 
@@ -82,7 +82,7 @@ namespace project_new.Controllers
             {
                 return NotFound();
             }
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id", category.ParentCategoryId);
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name", category.ParentCategoryId);
             return View(category);
         }
 
@@ -118,7 +118,7 @@ namespace project_new.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Id", category.ParentCategoryId);
+            ViewData["ParentCategoryId"] = new SelectList(_context.Category, "Id", "Name", category.ParentCategoryId);
             return View(category);
         }
 
@@ -141,20 +141,32 @@ namespace project_new.Controllers
             return View(category);
         }
 
-        // POST: Categories/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var category = await _context.Category.FindAsync(id);
-            if (category != null)
+            if (category == null)
             {
-                _context.Category.Remove(category);
+                return NotFound();
             }
 
+            // Check if the category is referenced as a parent category
+            bool isReferencedAsParent = await _context.Category.AnyAsync(c => c.ParentCategoryId == id);
+
+            if (isReferencedAsParent)
+            {
+                // Add an error message to the model state
+                ModelState.AddModelError(string.Empty, "This category cannot be deleted because it is referenced as a parent category by other categories.");
+                return View(category); // Return the same view with the error message
+            }
+
+            // If no references exist, proceed with deletion
+            _context.Category.Remove(category);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
 
         private bool CategoryExists(int id)
         {

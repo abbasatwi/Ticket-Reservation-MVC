@@ -66,11 +66,29 @@ namespace project_new.Controllers
         public async Task<IActionResult> Create([Bind("Id,Name,Description,Capacity,Location,PicUrl,BackPicUrl")] Stadium stadium, IFormFile picFile, IFormFile backPicFile)
         {
             var path = $"{_configuration.GetSection("FileManagement:SystemFileUploads").Value}";
+
+            // Early validation for file upload
+            if (picFile == null && string.IsNullOrEmpty(stadium.PicUrl))
+            {
+                ModelState.AddModelError("PicUrl", "The Picture file is required.");
+            }
+
+            if (backPicFile == null && string.IsNullOrEmpty(stadium.BackPicUrl))
+            {
+                ModelState.AddModelError("BackPicUrl", "The Background Picture file is required.");
+            }
+
+            // Return view if model state is invalid
+            if (!ModelState.IsValid)
+            {
+                return View(stadium);
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Check if a file is uploaded for PicUrl
+                    // File processing for PicUrl
                     if (picFile != null && picFile.Length > 0)
                     {
                         string picFileName = Guid.NewGuid().ToString() + Path.GetExtension(picFile.FileName);
@@ -90,7 +108,7 @@ namespace project_new.Controllers
                         stadium.PicUrl = picFileName;
                     }
 
-                    // Check if a file is uploaded for BackPicUrl
+                    // File processing for BackPicUrl
                     if (backPicFile != null && backPicFile.Length > 0)
                     {
                         string backPicFileName = Guid.NewGuid().ToString() + Path.GetExtension(backPicFile.FileName);
@@ -110,6 +128,7 @@ namespace project_new.Controllers
                         stadium.BackPicUrl = backPicFileName;
                     }
 
+                    // Save the stadium entity to the database
                     _context.Add(stadium);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
@@ -120,8 +139,10 @@ namespace project_new.Controllers
                     return View(stadium);
                 }
             }
+
             return View(stadium);
         }
+
 
 
         // Helper method to scan the file for malware
@@ -192,6 +213,23 @@ namespace project_new.Controllers
                 return NotFound();
             }
 
+            // Early validation for file upload
+            if (picFile == null && string.IsNullOrEmpty(stadium.PicUrl))
+            {
+                ModelState.AddModelError("PicUrl", "The Picture file is required.");
+            }
+
+            if (backPicFile == null && string.IsNullOrEmpty(stadium.BackPicUrl))
+            {
+                ModelState.AddModelError("BackPicUrl", "The Background Picture file is required.");
+            }
+
+            // Return view if model state is invalid
+            if (!ModelState.IsValid)
+            {
+                return View(stadium);
+            }
+
             try
             {
                 // Check if a file is uploaded for PicUrl
@@ -248,8 +286,10 @@ namespace project_new.Controllers
                     throw;
                 }
             }
+
             return RedirectToAction(nameof(Index));
         }
+
 
         [Authorize(Roles = "Admin")]
         // GET: Stadium/Delete/5
@@ -269,21 +309,39 @@ namespace project_new.Controllers
 
             return View(stadium);
         }
-        [Authorize(Roles = "Admin")]
+
         // POST: Stadium/Delete/5
+        [Authorize(Roles = "Admin")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var stadium = await _context.Stadium.FindAsync(id);
-            if (stadium != null)
+            if (stadium == null)
             {
-                _context.Stadium.Remove(stadium);
+                return NotFound();
             }
 
+            // Check if the stadium is referenced by any team
+            bool isReferencedByTeam = await _context.Teams.AnyAsync(t => t.StadiumId == id);
+
+            // Check if the stadium is referenced by any match
+            bool isReferencedByMatch = await _context.Match.AnyAsync(m => m.StadiumId == id);
+
+            if (isReferencedByTeam || isReferencedByMatch)
+            {
+                // Add an error message to the model state
+                ModelState.AddModelError(string.Empty, "This stadium cannot be deleted because it is referenced by a team or a match.");
+                return View(stadium); // Return the same view with the error message
+            }
+
+            // If no references exist, proceed with deletion
+            _context.Stadium.Remove(stadium);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private bool StadiumExists(int id)
         {

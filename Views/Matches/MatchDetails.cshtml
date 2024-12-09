@@ -88,11 +88,7 @@
     <!-- Starting Price -->
     <p><strong>Starting Price:</strong> @ViewBag.StartingPrice.ToString("C")</p>
 
-    <!-- Add to Favorites Button -->
-    <form method="post" action="@Url.Action("AddToFavorites", "Matches")">
-        <input type="hidden" name="matchId" value="@ViewBag.Match.Id" />
-        <button type="submit" class="btn btn-primary">Add to Favorites</button>
-    </form>
+  
 </div>
 
 @section Scripts {

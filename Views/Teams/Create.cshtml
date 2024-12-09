@@ -30,18 +30,22 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="ManagerId" class="control-label"></label>
-                <select asp-for="ManagerId" class="form-control" asp-items="ViewBag.ManagerId"></select>
+                <label asp-for="Manager" class="control-label"></label>
+                <select asp-for="ManagerId" class="form-control" asp-items="ViewBag.Manager"></select>
+                <span asp-validation-for="ManagerId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CaptainId" class="control-label"></label>
-                <select asp-for="CaptainId" class="form-control" asp-items="ViewBag.CaptainId"></select>
+                <label asp-for="Captain" class="control-label"></label>
+                <select asp-for="CaptainId" class="form-control" asp-items="ViewBag.Captain"></select>
+                <span asp-validation-for="CaptainId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="StadiumId" class="control-label"></label>
-                <input asp-for="StadiumId" class="form-control" />
+                <label asp-for="Stadium" class="control-label"></label>
+                <select asp-for="StadiumId" class="form-control" asp-items="ViewBag.Stadium"></select>
                 <span asp-validation-for="StadiumId" class="text-danger"></span>
             </div>
+
+
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

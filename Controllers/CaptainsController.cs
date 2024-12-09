@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -117,13 +118,13 @@ namespace project_new.Controllers
         }
 
         // GET: Captains/Delete/5
+        [Authorize(Roles = "Admin")] // Restrict access to Admins only
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-
             var captain = await _context.Captain
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (captain == null)
@@ -131,23 +132,45 @@ namespace project_new.Controllers
                 return NotFound();
             }
 
+            //// Check if the captain is associated with a team
+            //var isCaptainInTeam = _context.Teams.Any(t => t.CaptainId == id);
+            //if (isCaptainInTeam)
+            //{
+            //    ModelState.AddModelError(string.Empty, "You must delete the team associated with this captain first.");
+            //    return View(captain); // Display a custom error view if needed
+            //}
+
             return View(captain);
         }
 
-        // POST: Captains/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Admin")] // Restrict access to Admins only
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var captain = await _context.Captain.FindAsync(id);
-            if (captain != null)
+            if (captain == null)
             {
-                _context.Captain.Remove(captain);
+                return RedirectToAction(nameof(Index)); // If captain not found, redirect to Index
             }
 
+            // Check if the captain is associated with a team before removing
+            var isCaptainInTeam = _context.Teams.Any(t => t.CaptainId == id);
+            if (isCaptainInTeam)
+            {
+                // Add error and return the Delete view with the captain model
+                ModelState.AddModelError(string.Empty, "You must delete the team associated with this captain first.");
+                return View("Delete", captain);
+            }
+
+            // If no associated team, delete the captain
+            _context.Captain.Remove(captain);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private bool CaptainExists(int id)
         {

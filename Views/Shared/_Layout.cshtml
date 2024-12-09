@@ -37,7 +37,7 @@
     {
         @if (User.IsInRole("Admin"))
         {
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" style="color : black">
                 <div class="container-fluid">
                     <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Project Advanced</a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin" aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,18 +55,17 @@
                                     <i class="fa fa-user-friends" aria-hidden="true"></i> People
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Players" asp-action="Index">Players</a></li>
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Captains" asp-action="Index">Captains</a></li>
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Managers" asp-action="Index">Managers</a></li>
                                 </ul>
                             </li>
                         </ul>
+                        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout">
+                            <button style="background-color : brown" type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+                        </form>
                     </div>
                 </div>
-                            <!-- Collapsible wrapper -->
-                            <partial name="_LoginPartial" />
-                        <!-- Container wrapper -->
-            </nav>  
+            </nav>
         }
         else
         {
@@ -79,18 +78,18 @@
                             <!-- Navbar brand -->
                             <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Project_Advanced</a>
                             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                            aria-expanded="false" aria-label="Toggle navigation">
+                                    aria-expanded="false" aria-label="Toggle navigation">
                                 <span class="navbar-toggler-icon"></span>
                             </button>
 
                             <!-- Toggle button -->
                             <button class="navbar-toggler"
-                            type="button"
-                            data-mdb-collapse-init
-                            data-mdb-target="#navbarSupportedContent"
-                            aria-controls="navbarSupportedContent"
-                            aria-expanded="false"
-                            aria-label="Toggle navigation">
+                                    type="button"
+                                    data-mdb-collapse-init
+                                    data-mdb-target="#navbarSupportedContent"
+                                    aria-controls="navbarSupportedContent"
+                                    aria-expanded="false"
+                                    aria-label="Toggle navigation">
                                 <i class="fas fa-bars"></i>
                             </button>
 
