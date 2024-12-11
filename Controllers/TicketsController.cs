@@ -217,58 +217,93 @@ _context.Match.Select(m => new
 
         public async Task<IActionResult> Checkout(int ticketId, int quantity)
         {
-            TempData["TicketId"] = ticketId;
-            TempData["Quantity"] = quantity;
-
-            // Get the ticket details based on the ticketId
-            var ticket = await _context.Ticket.FindAsync(ticketId);
-
-            if (ticket == null)
+            try
             {
-                return NotFound();
-            }
+                // Set TempData to carry data between requests
+                TempData["TicketId"] = ticketId;
+                TempData["Quantity"] = quantity;
 
-            // Get the logged-in user's email
-            var userEmail = User.FindFirstValue(ClaimTypes.Email);
+                // Get the ticket details based on the ticketId
+                var ticket = await _context.Ticket.FindAsync(ticketId);
 
-            // Define the success and cancel URLs
-            var domain = "https://localhost:7226/";
-            var successUrl = $"{domain}Tickets/TransactionConfirmation?ticketId={ticketId}&quantity={quantity}";
-            var cancelUrl = domain;
-
-            // Create the session options
-            var options = new SessionCreateOptions
-            {
-                SuccessUrl = successUrl,
-                CancelUrl = cancelUrl,
-                PaymentMethodTypes = new List<string> { "card" },
-                LineItems = new List<SessionLineItemOptions>
-        {
-            new SessionLineItemOptions
-            {
-                PriceData = new SessionLineItemPriceDataOptions
+                // If ticket not found, return an error message
+                if (ticket == null)
                 {
-                    Currency = "usd",
-                    ProductData = new SessionLineItemPriceDataProductDataOptions
+                    ViewBag.ErrorMessage = "Ticket not found.";
+                    return View("CheckoutError"); // Redirect to CheckoutError view with an error message
+                }
+
+                // Get the logged-in user's email
+                var userEmail = User.FindFirstValue(ClaimTypes.Email);
+
+                // Define the success and cancel URLs
+                var domain = "https://localhost:7226/";
+                var successUrl = $"{domain}Tickets/TransactionConfirmation?ticketId={ticketId}&quantity={quantity}";
+                var cancelUrl = domain;
+
+                // Create the session options
+                var options = new SessionCreateOptions
+                {
+                    SuccessUrl = successUrl,
+                    CancelUrl = cancelUrl,
+                    PaymentMethodTypes = new List<string> { "card" },
+                    LineItems = new List<SessionLineItemOptions>
+            {
+                new SessionLineItemOptions
+                {
+                    PriceData = new SessionLineItemPriceDataOptions
                     {
-                        Name = "Ticket",
+                        Currency = "usd",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = "Ticket",
+                        },
+                        UnitAmount = (long)(ticket.Price * 100), // Stripe requires amount in cents
                     },
-                    UnitAmount = (long)(ticket.Price * 100), // Stripe requires amount in cents
+                    Quantity = quantity,
                 },
-                Quantity = quantity,
             },
-        },
-                Mode = "payment",
-                CustomerEmail = userEmail // Pass the customer's email
-            };
+                    Mode = "payment",
+                    CustomerEmail = userEmail // Pass the customer's email
+                };
 
-            // Create the session
-            var service = new SessionService();
-            var session = await service.CreateAsync(options);
+                // Create the session
+                var service = new SessionService();
+                Session session = null;
+                try
+                {
+                    session = await service.CreateAsync(options);
+                }
+                catch (StripeException ex)
+                {
+                    // Log the exception and show a user-friendly message
+                    Console.WriteLine($"Error creating session: {ex.Message}");
 
-            // Redirect the user to the checkout session URL
-            return Redirect(session.Url);
+                    ViewBag.ErrorMessage = "An error occurred while processing your payment session. Please try again later.";
+                    return View("CheckoutError"); // Redirect to CheckoutError view
+                }
+
+                // If session creation failed (for some reason session is null), handle gracefully
+                if (session == null)
+                {
+                    ViewBag.ErrorMessage = "Failed to create payment session. Please try again.";
+                    return View("CheckoutError"); // Redirect to CheckoutError view
+                }
+
+                // Redirect the user to the checkout session URL
+                return Redirect(session.Url);
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected errors (database, network, etc.)
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+
+                // Return a generic error message
+                ViewBag.ErrorMessage = "An unexpected error occurred. Please try again later.";
+                return View("CheckoutError"); // Redirect to CheckoutError view
+            }
         }
+
 
 
 
@@ -323,8 +358,8 @@ _context.Match.Select(m => new
             var matchAndTicketDetails = await ticket.GetMatchAndTicketDetailsAsync(_context);
 
             // Send email confirmation
-            string fromMail = "medianeozeir@gmail.com";
-            string fromPassword = "cbqgzejodxgnyeiz";
+            string fromMail = "alaamohamadd2004@gmail.com";
+            string fromPassword = "akcifctjlwqmzdqt";
 
             MailMessage message = new MailMessage();
             message.From = new MailAddress(fromMail);
@@ -333,7 +368,7 @@ _context.Match.Select(m => new
             message.Body = $"<html><body> Thank you for your order. <br> {matchAndTicketDetails} </body></html>";
             message.IsBodyHtml = true;
 
-            var smtpClient = new SmtpClient("smtp-mail.outlook.com")
+            var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
                 Credentials = new NetworkCredential(fromMail, fromPassword),

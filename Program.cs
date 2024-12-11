@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using project_new.Data;
+using StackExchange.Redis;
 using Stripe;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
@@ -22,6 +23,15 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+// Add Redis Cache
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisConfig = builder.Configuration.GetSection("Redis");
+    var connectionString = redisConfig["Connection"];
+    return ConnectionMultiplexer.Connect(connectionString);
+});
+
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

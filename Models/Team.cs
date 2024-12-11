@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace project_new.Models
 {
@@ -11,7 +12,9 @@ namespace project_new.Models
         public int ManagerId { get; set; }
         public int CaptainId { get; set; }
         public int StadiumId { get; set; }
+        [JsonIgnore]
         public List<Match>? HomeMatches { get; set; }
+        [JsonIgnore]
         public List<Match>? AwayMatches { get; set; }
 
         [ForeignKey("ManagerId")]

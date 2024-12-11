@@ -7,24 +7,29 @@ using project_new.Models;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using project_new.Dtos;
+using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
+using System.Text.Json;
 
 
 namespace project_new.Controllers
 {
-	[Authorize]
-	public class HomeController : Controller
-	{
-		private readonly ILogger<HomeController> _logger;
-		private readonly ApplicationDbContext _context;
-		private readonly HttpClient _client;
-		Uri baseAddress = new Uri("http://localhost:5019/api/");
-		public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
-		{
-			_logger = logger;
-			_context = context;
-			_client = new HttpClient();
-			_client.BaseAddress = baseAddress;
-		}
+    [Authorize]
+    public class HomeController : Controller
+    {
+        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly IDistributedCache _cache;
+        
+
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IDistributedCache cache)
+        {
+            _logger = logger;
+            _context = context;
+            _cache = cache;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -33,30 +38,116 @@ namespace project_new.Controllers
                 return RedirectToAction("IndexAdmin");
             }
 
-            // Fetch matches
-            var matches = await _context.Match
-                .Include(m => m.HomeTeam)
-                .Include(m => m.AwayTeam)
-                .Include(m => m.Stadium)
-                .Include(m => m.Category)
-                .Take(8)
-                .ToListAsync();
+            // Fetch matches from Redis or database
+            var matchesJson = await _cache.GetStringAsync("Matches");
+            List<MatchDTO> matches;
+            if (matchesJson == null)
+            {
+                _logger.LogInformation("Redis cache missed for 'Matches'. Fetching from the database.");
 
-            // Fetch teams directly from the database
-            var teams = await _context.Teams.Take(8).ToListAsync();
+                matches = await _context.Match
+                    .Include(m => m.HomeTeam)
+                    .Include(m => m.AwayTeam)
+                    .Include(m => m.Stadium)
+                    .Include(m => m.Category)
+                    .Take(8)
+                    .Select(m => new MatchDTO
+                    {
+                        Id = m.Id,
+                        MatchUrl = m.MatchUrl,
+                        HomeTeamName = m.HomeTeam.Name,
+                        AwayTeamName = m.AwayTeam.Name,
+                        MatchDate = m.MatchDate,
+                        CategoryName = m.Category.Name,
+                        StadiumLocation = m.Stadium.Location
+                    })
+                    .ToListAsync();
 
-            var categories = await _context.Category
-                .Where(c => c.Name == "Champions League" || c.Name == "LaLiga" || c.Name == "Premier League")
-                .ToListAsync();
+                // Cache matches for 5 minutes
+                await _cache.SetStringAsync("Matches", System.Text.Json.JsonSerializer.Serialize(matches), new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+            }
+            else
+            {
+                _logger.LogInformation("Data retrieved from Redis cache for 'Matches'.");
+                matches = System.Text.Json.JsonSerializer.Deserialize<List<MatchDTO>>(matchesJson);
+            }
+
+            // Fetch teams from Redis or database
+            var teamsJson = await _cache.GetStringAsync("Teams");
+            List<TeamDTO> teams;
+            if (teamsJson == null)
+            {
+                _logger.LogInformation("Redis cache missed for 'Teams'. Fetching from the database.");
+
+                teams = await _context.Teams
+                    .Include(t => t.Manager)
+                    .Include(t => t.Captain)
+                    .Include(t => t.Stadium)
+                    .Select(t => new TeamDTO
+                    {
+                        Id = t.Id,
+                        Name = t.Name,
+                        Description = t.Description,
+                        LogoUrl = t.LogoUrl,
+                        ManagerName = t.Manager.Name,
+                        CaptainName = t.Captain.Name,
+                        StadiumName = t.Stadium.Name
+                    })
+                    .Take(8)
+                    .ToListAsync();
+
+                // Cache teams for 5 minutes
+                await _cache.SetStringAsync("Teams", System.Text.Json.JsonSerializer.Serialize(teams), new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+            }
+            else
+            {
+                _logger.LogInformation("Data retrieved from Redis cache for 'Teams'.");
+                teams = System.Text.Json.JsonSerializer.Deserialize<List<TeamDTO>>(teamsJson);
+            }
+
+            // Fetch categories from Redis or database
+            var categoriesJson = await _cache.GetStringAsync("Categories");
+            List<CategoryDTO> categories;
+            if (categoriesJson == null)
+            {
+                _logger.LogInformation("Redis cache missed for 'Categories'. Fetching from the database.");
+
+                categories = await _context.Category
+                    .Where(c => c.Name == "Champions League" || c.Name == "LaLiga" || c.Name == "Premier League")
+                    .Select(c => new CategoryDTO
+                    {
+                        Id = c.Id,
+                        Name = c.Name
+                    })
+                    .ToListAsync();
+
+                // Cache categories for 5 minutes
+                await _cache.SetStringAsync("Categories", System.Text.Json.JsonSerializer.Serialize(categories), new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+            }
+            else
+            {
+                _logger.LogInformation("Data retrieved from Redis cache for 'Categories'.");
+                categories = System.Text.Json.JsonSerializer.Deserialize<List<CategoryDTO>>(categoriesJson);
+            }
 
             // Pass data to ViewBag
-            ViewBag.Teams = teams;
             ViewBag.Matches = matches;
-            ViewBag.TotalPages = 1;
+            ViewBag.Teams = teams;
             ViewBag.Categories = categories;
 
-            return View(teams);
+            return View(matches);
         }
+
+
 
 
 
@@ -74,31 +165,31 @@ namespace project_new.Controllers
         //ViewBag.Stadiums = new List<Stadium> { santiago, campnou, allianz, anfield, wembley, parcdesprinces, oldtrafford };
 
         public async Task<IActionResult> IndexAdminAsync()
-		{
-                var model = new AdminDashboard
-                {
-                    StadiumCount = await _context.Stadium.CountAsync(),
-                    TeamCount = await _context.Teams.CountAsync(),
-                    TicketCount = await _context.Ticket.CountAsync(),
-                    MatchCount = await _context.Match.CountAsync(),
-                    CategoryCount = await _context.Category.CountAsync(),
-                    CaptainCount = await _context.Captain.CountAsync(),
-                    ManagerCount = await _context.Manager.CountAsync()
-                };
+        {
+            var model = new AdminDashboard
+            {
+                StadiumCount = await _context.Stadium.CountAsync(),
+                TeamCount = await _context.Teams.CountAsync(),
+                TicketCount = await _context.Ticket.CountAsync(),
+                MatchCount = await _context.Match.CountAsync(),
+                CategoryCount = await _context.Category.CountAsync(),
+                CaptainCount = await _context.Captain.CountAsync(),
+                ManagerCount = await _context.Manager.CountAsync()
+            };
 
-                return View(model);
-		}
+            return View(model);
+        }
 
-		public IActionResult Privacy()
-		{
+        public IActionResult Privacy()
+        {
 
-			return View();
-		}
+            return View();
+        }
 
-		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error()
-		{
-			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-		}
-	}
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+    }
 }

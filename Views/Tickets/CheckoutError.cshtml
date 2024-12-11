@@ -1,0 +1,10 @@
+﻿@{
+    ViewData["Title"] = "Checkout Error";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h1>Checkout Error</h1>
+    <p>@ViewBag.ErrorMessage</p>
+    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Back to Home</a>
+</div>

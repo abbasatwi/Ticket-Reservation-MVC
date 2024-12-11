@@ -2,6 +2,7 @@
     ViewData["Title"] = "Home Page";
 }
 @using Microsoft.AspNetCore.Identity
+@using project_new.Dtos
 <style>
     /* Adjustments for map container */
     #map-container {
@@ -46,9 +47,9 @@
     int matchesPerList = 3;
 
     // Initialize three lists to hold matches
-    List<Match> firstList = new List<Match>();
-    List<Match> secondList = new List<Match>();
-    List<Match> thirdList = new List<Match>();
+    List<MatchDTO> firstList = new List<MatchDTO>();
+    List<MatchDTO> secondList = new List<MatchDTO>();
+    List<MatchDTO> thirdList = new List<MatchDTO>();
 
     // Populate the lists with matches from ViewBag
     int matchIndex = 0;
@@ -85,9 +86,9 @@
                             <img src="/img/@match.MatchUrl" class="card-img-top lazyload" alt="Match Image">
                         </a>
                         <div class="card-body">
-                            <h5 class="card-title">@match.HomeTeam.Name vs @match.AwayTeam.Name</h5>
+                            <h5 class="card-title">@match.HomeTeamName vs @match.AwayTeamName</h5>
                             <p class="card-text">@match.MatchDate?.ToString("HH:mm")</p>
-                            <p class="card-text">@match.Category.Name - @match.Stadium.Location</p>
+                            <p class="card-text">@match.CategoryName - @match.StadiumLocation</p>
                             <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })" class="btn btn-primary">View Tickets</a>
                         </div>
                     </div>
@@ -105,9 +106,9 @@
                             <img src="/img/@match.MatchUrl" class="card-img-top lazyload" alt="Match Image" loading="lazy">
                         </a>
                         <div class="card-body">
-                            <h5 class="card-title">@match.HomeTeam.Name vs @match.AwayTeam.Name</h5>
+                            <h5 class="card-title">@match.HomeTeamName vs @match.AwayTeamName</h5>
                             <p class="card-text">@match.MatchDate?.ToString("HH:mm")</p>
-                            <p class="card-text">@match.Category.Name - @match.Stadium.Location</p>
+                            <p class="card-text">@match.CategoryName - @match.StadiumLocation</p>
                             <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })" class="btn btn-primary">View Tickets</a>
                         </div>
                     </div>
@@ -125,9 +126,9 @@
                             <img src="/img/@match.MatchUrl" class="card-img-top lazyload" alt="Match Image" loading="lazy">
                         </a>
                         <div class="card-body">
-                            <h5 class="card-title">@match.HomeTeam.Name vs @match.AwayTeam.Name</h5>
+                            <h5 class="card-title">@match.HomeTeamName vs @match.AwayTeamName</h5>
                             <p class="card-text">@match.MatchDate?.ToString("HH:mm")</p>
-                            <p class="card-text">@match.Category.Name - @match.Stadium.Location</p>
+                            <p class="card-text">@match.CategoryName - @match.StadiumLocation</p>
                             <a href="@Url.Action("MatchDetails", "Matches", new { matchId = match.Id })" class="btn btn-primary">View Tickets</a>
                         </div>
                     </div>
