@@ -341,29 +341,45 @@ namespace project_new.Controllers
         }
         public IActionResult Search(string searchTerm)
         {
-            // Check if the search term is null or empty
             if (string.IsNullOrEmpty(searchTerm))
             {
                 ViewBag.Message = "No results found. Please enter a search term.";
-                return View("SearchResults", new List<Match>()); // Return an empty list
+                return View("SearchResults", new List<Match>());
             }
 
-            // Perform search logic based on the searchTerm
+            // Perform search for Matches
             var matches = _context.Match
                 .Include(m => m.HomeTeam)
                 .Include(m => m.AwayTeam)
                 .Include(m => m.Stadium)
                 .Include(m => m.Category)
-                .Where(m => m.HomeTeam.Name.Contains(searchTerm) || m.AwayTeam.Name.Contains(searchTerm))
+                .Where(m => m.HomeTeam.Name.Contains(searchTerm) ||
+                            m.AwayTeam.Name.Contains(searchTerm) ||
+                            m.Stadium.Name.Contains(searchTerm) ||
+                            m.Category.Name.Contains(searchTerm))
                 .ToList();
 
-            // Check if no matches are found
-            if (matches == null || !matches.Any())
+            // Perform search for Teams
+            var teams = _context.Teams
+                .Where(t => t.Name.Contains(searchTerm))
+                .ToList();
+
+            // Perform search for Stadiums
+            var stadiums = _context.Stadium
+                .Where(s => s.Name.Contains(searchTerm) || s.Location.Contains(searchTerm))
+                .ToList();
+
+            // Use ViewBag to pass results to the view
+            ViewBag.Matches = matches;
+            ViewBag.Teams = teams;
+            ViewBag.Stadiums = stadiums;
+
+            if (!matches.Any() && !teams.Any() && !stadiums.Any())
             {
-                ViewBag.Message = "No matches found for the provided search term.";
+                ViewBag.Message = "No results found for the provided search term.";
             }
 
-            return View("SearchResults", matches);
+            return View("SearchResults");
         }
 
 
