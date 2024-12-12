@@ -1,7 +1,14 @@
-restore nugget packages
-adjust db string in app settings
-update database in package manager console 
-run this script : 
+1- restore nugget packages
+
+
+2- adjust db string in app settings
+
+
+
+3- update database in package manager console 
+
+
+4- run this script : 
 USE [Project_Advanced-test]
 GO
 INSERT [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName], [ConcurrencyStamp]) VALUES (N'571151d4-3b42-4bc9-ab74-7eb74fd77864', N'Admin', N'ADMIN', NULL)
@@ -137,5 +144,5 @@ INSERT [dbo].[__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES (N
 INSERT [dbo].[__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES (N'20240507122544_ticket-transaction', N'8.0.4')
 GO
 
-in powershell run : dotnet user-secrets set "Authentication:Google:ClientSecret" "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"
+5- in powershell run : dotnet user-secrets set "Authentication:Google:ClientSecret" "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"
 then run this : dotnet user-secrets set "Authentication:Google:Client" "162912687430-fcqpbo64huck0mqe7h353le881n184mb.apps.googleusercontent.com
